@@ -7,6 +7,7 @@ var dojoConfig = {
 		'dijit',
 		'dojo',
 		'dojox',
+		'dstore',
 		'put-selector',
 		'xstyle'
 	]
