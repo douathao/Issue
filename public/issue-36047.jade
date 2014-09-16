@@ -1,0 +1,15 @@
+doctype html
+html
+head(lang='en')
+	meta(charset='UTF-8')
+	link(rel='stylesheet', href='lib/dijit/themes/claro/claro.css')
+	link(rel='stylesheet', href='lib/dgrid/css/dgrid.css')
+	script(src='js/config.js')
+	script(src='lib/dojo/dojo.js')
+	title
+	body.claro
+		h1 Expando bug
+		#dgrid
+		#create(data-dojo-type='dijit/form/Button') Create items
+		#delete(data-dojo-type='dijit/form/Button') Delete items
+		script(src='js/36047.js')

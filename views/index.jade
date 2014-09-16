@@ -1,0 +1,10 @@
+extends layout
+
+block content
+	h1 Issues
+	ul
+		each issue in issues
+			li
+				a(href="issue-#{issue}.html")
+					| Issue - #{issue}
+

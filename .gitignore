@@ -1,2 +1,6 @@
 .idea
-lib/
+public/lib/
+node_modules/
+*.iml
+*.css
+*.html
