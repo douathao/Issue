@@ -1,0 +1,115 @@
+doctype html
+html
+	body.claro
+		h1 Dojo FAQ: How do I upload a CSV file and then access that data within my application?
+		img(style='margin: 20px 0 20px 20px; float: right;', alt='DojoFAQ', src='http://www.sitepen.com/blog/wp-content/uploads/2013/09/DojoFAQ.png', width='200', height='200')
+		p To upload a CSV file, you can use the <a href="https://developer.mozilla.org/en-US/docs/Web/Guide/Using_FormData_Objects">FormData</a> object or <a href="http://dojotoolkit.org/reference-guide/1.10/dojox/form/Uploader.html">dojo/form/Uploader</a>. When the CSV file is successfully uploaded, you can use Dojo <a href="http://dojotoolkit.org/reference-guide/1.10/dojo/request.html">Request</a> to retrieve the file. There are two ways to parse the CSV file in JavaScript using <a href="http://dojotoolkit.org/">Dojo</a>; They are the <a href="https://github.com/SitePen/dstore">dstore</a> csv and <a href="https://github.com/kfranqueiro/dojo-smore">dojo-smore</a> Csv
+		h2 Uploading file to the server
+		p I will be using the <a href="http://dojotoolkit.org/reference-guide/1.10/dojox/form/Uploader.html">dojo/form/Uploader</a> to upload a file to the server. You have the choice to instantiate the Uploader widget programmatically or declaratively based on your project, see <a href="http://dojotoolkit.org/reference-guide/1.10/quickstart/writingWidgets.html">here</a> for more information.
+		p The Uploader widget is wrapped in a form element with a method "post" action to "/upload", and enctype to "multipart/form-data". When a file is selected, the form will do a POST request to the url "/upload."
+		pre
+			|< form id="myForm" method="post" action="/upload" enctype="multipart/form-data">
+			|	< div id="uploader"></div>
+			|< /form>
+		p Here, I am instantiating the Uploader widget programmatically to a div with an ID of "uploader":
+		pre
+			|var uploader = new Uploader({
+			|	name: 'uploadedfile',
+			|	type: 'file',
+			|	label: 'Select CSV file',
+			|	uploadOnSelect: true, // immediately upload file upon selected
+			|	onComplete: onComplete
+			|}, 'uploader');
+			|uploader.startup();
+		p Once a file is selected with the Uploader widget, the form will do a POST request to the url "/upload". The backend will need to save the file to a location where you can access and read the file. You can use any backend code to handle the file request, Here I am using <a href="http://expressjs.com/">ExpressJS</a> web framework for <a href="http://nodejs.org/">NodeJS</a> to handle the file request.
+		pre
+			|function upload (req, res) {
+			|	var file,
+			|		newPath;
+			| &nbsp;
+			|	// save file to upload directory
+			|	if (req.files) {
+			|		file = req.files.uploadedfile;
+			| &nbsp;
+			|		fs.readFile(file.path, function (err, data) {
+			|			newPath = path.normalize(__dirname + '/../public/upload/' + file.originalFilename);
+			| &nbsp;
+			|			fs.writeFile(newPath, data, function (err) {
+			|				if (err) { return next(err); }
+			|				res.json({success: true, message: 'file is successfully uploaded.', filename: file.originalFilename});
+			|			});
+			|		});
+			|	} else {
+			|		res.status(400).json({success: false, message:'No file attached'});
+			|	}
+			|}
+		p If file is successfully saved, the server will send a response with a status of 200 and return a JSON object with properties message and filename.
+		h2 Fetching the file from the server
+		p In this example, I will be using Dojo <a href="http://dojotoolkit.org/reference-guide/1.10/dojo/request.html">Request</a> to fetch the file.
+		p In our code above we added an onComplete handler to the Uploader widget upon instantiate. The function will be call when the server send a response back.
+		p The onComplete function:
+		pre
+			|function onComplete (res) {
+			|	if (res.filename) {
+			| &nbsp;
+			|		// request the uploaded csv file
+			|		request('upload/' + res.filename).then(function (res) {
+			|			// res = CSV string
+			|			...
+			|		});
+			|	} else {
+			|		alert('Fail to upload file');
+			|	}
+			|}
+		p The onComplete function use the <a href="http://dojotoolkit.org/reference-guide/1.10/dojo/request.html">Request</a> to retrieve the file we uploaded and saves in the backend. Once the <a href="http://dojotoolkit.org/reference-guide/1.10/dojo/request.html">Request</a> successfully fetch the file, we can use either the <a href="https://github.com/SitePen/dstore">dstore</a> csv or <a href="https://github.com/kfranqueiro/dojo-smore">dojo-smore</a> Csv to parse the response.
+		h2 dstore/csv
+		p When using <a href="https://github.com/SitePen/dstore">dstore</a> csv, you need to initialize the object first and then use the parse function. This will return an array of objects with the key as the name and value as the value.
+		p Example:
+		pre
+			|request('upload/' + res.filename).then(function (res) {
+			|	// res = CSV string
+			|	var data = (new csv()).parse(res); // [{key: value}, {key: value}, ...]
+			|});
+		p With dstore csv you can set the delimiter and newline then parse the data, after the data is parse you can access
+		pre
+			|request('upload/' + res.filename).then(function (res) {
+			|	// res = CSV string
+			|	var data,
+			|		dstoreCsv = new csv();
+			|	dstore.delimiter = 'anyDelimiter' // default: ',';
+			|	dstore.newline = 'newline' // only change this if you use different character as newline;
+			|	var data = dstore.parse(res); // [{key: value}, {key: value}]
+			|	dstore.fieldName // ["field1", "field2", ...]
+			|});
+		h2 dojo-smore/Csv
+		p When using <a href="https://github.com/kfranqueiro/dojo-smore">dojo-smore</a> Csv, you need to initialize the object by passing in the CSV data string as the data property and other options then you can access the data propery. The data is an array of objects with the key as the name and value as the value.
+		p Example:
+		pre
+			|request('upload/' + res.filename).then(function (res) {
+			|	// res = CSV string
+			|	var result = new Csv({data: res, delimiter, ","});
+			|	result.data // [{key: value}, {key: value}, ...]
+			|	result.fieldName // ["field1", "field2", ...]
+			|	// you can add or remove data
+			|	var id = result.add({field1: 'field1', field2: 'field2'});
+			|	result.remove(id);
+			|	// convert the data to csv
+			|	result.toCsv();
+			|});
+
+
+		h2 Example:
+		#dataResult
+		form#myForm(method='post', action='issue/35998', enctype='multipart/form-data')
+			#uploader
+
+
+head(lang='en')
+	meta(charset='UTF-8')
+	link(rel='stylesheet', href='lib/dijit/themes/claro/claro.css')
+	link(rel='stylesheet', href='lib/dgrid/css/dgrid.css')
+	link(rel='stylesheet', href='css/style.css')
+	script(src='js/config.js')
+	script(src='lib/dojo/dojo.js')
+	script(src='js/35998.js')
+	title Issue 35998

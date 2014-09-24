@@ -8,6 +8,7 @@ var dojoConfig = {
 		'dojo',
 		'dojox',
 		'dstore',
+		'dojo-smore',
 		'put-selector',
 		'xstyle'
 	]

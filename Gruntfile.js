@@ -39,6 +39,10 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-stylus');
 	grunt.loadNpmTasks('grunt-contrib-watch');
 	/**
+	 * Production Task
+	 */
+	grunt.task.registerTask('production', ['jade', 'stylus']);
+	/**
 	 * Default Task
 	 */
 	grunt.task.registerTask('default', ['jade', 'stylus', 'watch']);
